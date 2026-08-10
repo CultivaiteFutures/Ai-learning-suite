@@ -1,0 +1,16 @@
+[
+  { "id": "t1", "name": "Priya Sharma", "email": "priya.sharma@aischool.edu", "subject": "Mathematics", "gradeLevel": "Grade 9", "status": "active", "joinedDate": "2022-06-14" },
+  { "id": "t2", "name": "Arjun Nair", "email": "arjun.nair@aischool.edu", "subject": "Science", "gradeLevel": "Grade 8", "status": "active", "joinedDate": "2021-08-02" },
+  { "id": "t3", "name": "Meera Iyer", "email": "meera.iyer@aischool.edu", "subject": "English", "gradeLevel": "Grade 6", "status": "active", "joinedDate": "2023-01-10" },
+  { "id": "t4", "name": "Rohan Verma", "email": "rohan.verma@aischool.edu", "subject": "History", "gradeLevel": "Grade 10", "status": "inactive", "joinedDate": "2020-03-22" },
+  { "id": "t5", "name": "Ananya Reddy", "email": "ananya.reddy@aischool.edu", "subject": "Computer Science", "gradeLevel": "Grade 11", "status": "active", "joinedDate": "2022-11-05" },
+  { "id": "t6", "name": "Karthik Raman", "email": "karthik.raman@aischool.edu", "subject": "Physical Education", "gradeLevel": "Grade 7", "status": "active", "joinedDate": "2021-05-18" },
+  { "id": "t7", "name": "Divya Menon", "email": "divya.menon@aischool.edu", "subject": "Art", "gradeLevel": "Grade 3", "status": "active", "joinedDate": "2023-04-01" },
+  { "id": "t8", "name": "Suresh Pillai", "email": "suresh.pillai@aischool.edu", "subject": "Mathematics", "gradeLevel": "Grade 12", "status": "active", "joinedDate": "2019-09-09" },
+  { "id": "t9", "name": "Lakshmi Narayan", "email": "lakshmi.narayan@aischool.edu", "subject": "Music", "gradeLevel": "Grade 2", "status": "active", "joinedDate": "2022-02-14" },
+  { "id": "t10", "name": "Vikram Singh", "email": "vikram.singh@aischool.edu", "subject": "Science", "gradeLevel": "Grade 5", "status": "inactive", "joinedDate": "2020-07-30" },
+  { "id": "t11", "name": "Kavya Krishnan", "email": "kavya.krishnan@aischool.edu", "subject": "English", "gradeLevel": "Grade 4", "status": "active", "joinedDate": "2023-08-21" },
+  { "id": "t12", "name": "Aditya Rao", "email": "aditya.rao@aischool.edu", "subject": "History", "gradeLevel": "Grade 9", "status": "active", "joinedDate": "2021-12-11" },
+  { "id": "t13", "name": "Neha Joshi", "email": "neha.joshi@aischool.edu", "subject": "Computer Science", "gradeLevel": "Grade 10", "status": "active", "joinedDate": "2022-09-17" },
+  { "id": "t14", "name": "Manoj Kumar", "email": "manoj.kumar@aischool.edu", "subject": "Physical Education", "gradeLevel": "Grade 1", "status": "active", "joinedDate": "2020-01-25" }
+]

@@ -1,0 +1,12 @@
+[
+  { "id": "a1", "courseId": "c1", "title": "Linear Equations Quiz", "type": "Quiz", "dueDate": "2026-08-01", "totalStudents": 42, "submissionsCount": 30, "status": "open" },
+  { "id": "a2", "courseId": "c1", "title": "Algebra Practice Set 3", "type": "Homework", "dueDate": "2026-07-28", "totalStudents": 42, "submissionsCount": 42, "status": "closed" },
+  { "id": "a3", "courseId": "c2", "title": "Triangle Properties Test", "type": "Quiz", "dueDate": "2026-08-05", "totalStudents": 38, "submissionsCount": 12, "status": "open" },
+  { "id": "a4", "courseId": "c4", "title": "Cell Structure Lab Report", "type": "Project", "dueDate": "2026-08-10", "totalStudents": 35, "submissionsCount": 20, "status": "grading" },
+  { "id": "a5", "courseId": "c6", "title": "Ancient Egypt Essay", "type": "Homework", "dueDate": "2026-07-30", "totalStudents": 40, "submissionsCount": 38, "status": "grading" },
+  { "id": "a6", "courseId": "c7", "title": "Python Basics Quiz 1", "type": "Quiz", "dueDate": "2026-08-02", "totalStudents": 30, "submissionsCount": 30, "status": "closed" },
+  { "id": "a7", "courseId": "c7", "title": "Build a Calculator App", "type": "Project", "dueDate": "2026-08-15", "totalStudents": 30, "submissionsCount": 5, "status": "open" },
+  { "id": "a8", "courseId": "c2", "title": "Geometry Homework Week 4", "type": "Homework", "dueDate": "2026-07-27", "totalStudents": 38, "submissionsCount": 36, "status": "grading" },
+  { "id": "a9", "courseId": "c4", "title": "Photosynthesis vs Respiration Quiz", "type": "Quiz", "dueDate": "2026-08-08", "totalStudents": 35, "submissionsCount": 0, "status": "open" },
+  { "id": "a10", "courseId": "c6", "title": "World Civilizations Map Project", "type": "Project", "dueDate": "2026-08-20", "totalStudents": 40, "submissionsCount": 3, "status": "open" }
+]

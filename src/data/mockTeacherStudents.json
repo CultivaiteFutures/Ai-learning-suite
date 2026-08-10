@@ -1,0 +1,14 @@
+[
+  { "id": "st1", "name": "Aarav Mehta", "email": "aarav.mehta@student.aischool.edu", "course": "Algebra Foundations", "grade": "Grade 9", "section": "A", "averageGrade": 88, "attendance": 96, "lastActive": "2026-07-22" },
+  { "id": "st2", "name": "Ishita Kapoor", "email": "ishita.kapoor@student.aischool.edu", "course": "Cell Biology Deep Dive", "grade": "Grade 9", "section": "B", "averageGrade": 91, "attendance": 98, "lastActive": "2026-07-23" },
+  { "id": "st3", "name": "Vivaan Shah", "email": "vivaan.shah@student.aischool.edu", "course": "Geometry Essentials", "grade": "Grade 10", "section": "A", "averageGrade": 79, "attendance": 90, "lastActive": "2026-07-21" },
+  { "id": "st4", "name": "Saanvi Gupta", "email": "saanvi.gupta@student.aischool.edu", "course": "Python Programming Basics", "grade": "Grade 10", "section": "B", "averageGrade": 85, "attendance": 93, "lastActive": "2026-07-20" },
+  { "id": "st5", "name": "Aditya Malhotra", "email": "aditya.malhotra@student.aischool.edu", "course": "World History: Ancient Civilizations", "grade": "Grade 8", "section": "A", "averageGrade": 82, "attendance": 95, "lastActive": "2026-07-23" },
+  { "id": "st6", "name": "Diya Bansal", "email": "diya.bansal@student.aischool.edu", "course": "World History: Ancient Civilizations", "grade": "Grade 8", "section": "B", "averageGrade": 76, "attendance": 88, "lastActive": "2026-07-19" },
+  { "id": "st7", "name": "Kabir Chaudhary", "email": "kabir.chaudhary@student.aischool.edu", "course": "Algebra Foundations", "grade": "Grade 9", "section": "B", "averageGrade": 68, "attendance": 82, "lastActive": "2026-07-18" },
+  { "id": "st8", "name": "Anaya Joshi", "email": "anaya.joshi@student.aischool.edu", "course": "Cell Biology Deep Dive", "grade": "Grade 9", "section": "A", "averageGrade": 94, "attendance": 99, "lastActive": "2026-07-23" },
+  { "id": "st9", "name": "Reyansh Trivedi", "email": "reyansh.trivedi@student.aischool.edu", "course": "Geometry Essentials", "grade": "Grade 10", "section": "B", "averageGrade": 73, "attendance": 85, "lastActive": "2026-07-17" },
+  { "id": "st10", "name": "Myra Kulkarni", "email": "myra.kulkarni@student.aischool.edu", "course": "Python Programming Basics", "grade": "Grade 10", "section": "A", "averageGrade": 90, "attendance": 97, "lastActive": "2026-07-23" },
+  { "id": "st11", "name": "Vihaan Desai", "email": "vihaan.desai@student.aischool.edu", "course": "Algebra Foundations", "grade": "Grade 9", "section": "A", "averageGrade": 61, "attendance": 74, "lastActive": "2026-07-15" },
+  { "id": "st12", "name": "Pari Agarwal", "email": "pari.agarwal@student.aischool.edu", "course": "World History: Ancient Civilizations", "grade": "Grade 8", "section": "A", "averageGrade": 88, "attendance": 96, "lastActive": "2026-07-22" }
+]

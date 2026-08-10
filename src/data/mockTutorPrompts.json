@@ -1,0 +1,8 @@
+[
+  { "id": "explain", "label": "Explain this lesson", "icon": "BookOpenCheck", "prompt": "Can you explain this lesson to me in simple terms?" },
+  { "id": "summarize", "label": "Summarize", "icon": "FileText", "prompt": "Can you summarize the key points of this lesson?" },
+  { "id": "examples", "label": "Give examples", "icon": "Lightbulb", "prompt": "Can you give me a few examples to help me understand this better?" },
+  { "id": "quiz", "label": "Generate quiz", "icon": "ClipboardList", "prompt": "Can you generate a short quiz to test my understanding?" },
+  { "id": "simplify", "label": "Simplify for my grade", "icon": "Sparkles", "prompt": "Can you simplify this explanation for my grade level?" },
+  { "id": "translate", "label": "Translate", "icon": "Languages", "prompt": "Can you translate this explanation into another language for me?" }
+]

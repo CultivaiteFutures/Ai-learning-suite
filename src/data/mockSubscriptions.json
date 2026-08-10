@@ -1,0 +1,7 @@
+[
+  { "id": "sub-001", "schoolId": "sch-001", "plan": "Enterprise", "status": "active", "startedDate": "2025-06-01", "expiryDate": "2027-06-01", "renewalDate": "2027-06-01", "studentLimit": 2000, "teacherLimit": 150 },
+  { "id": "sub-002", "schoolId": "sch-002", "plan": "Premium", "status": "active", "startedDate": "2025-08-14", "expiryDate": "2026-08-14", "renewalDate": "2026-08-14", "studentLimit": 1200, "teacherLimit": 90 },
+  { "id": "sub-003", "schoolId": "sch-003", "plan": "Basic", "status": "expired", "startedDate": "2025-09-02", "expiryDate": "2026-07-15", "renewalDate": "2026-07-15", "studentLimit": 500, "teacherLimit": 40 },
+  { "id": "sub-004", "schoolId": "sch-004", "plan": "Trial", "status": "active", "startedDate": "2026-07-10", "expiryDate": "2026-08-09", "renewalDate": "2026-08-09", "studentLimit": 200, "teacherLimit": 20 },
+  { "id": "sub-005", "schoolId": "sch-005", "plan": "Basic", "status": "active", "startedDate": "2026-07-22", "expiryDate": "2027-07-22", "renewalDate": "2027-07-22", "studentLimit": 300, "teacherLimit": 25 }
+]

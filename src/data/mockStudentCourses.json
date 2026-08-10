@@ -1,0 +1,7 @@
+[
+  { "id": "sc1", "name": "Algebra Foundations", "subject": "Mathematics", "grade": "Grade 9", "teacherName": "Priya Sharma", "thumbnailColor": "indigo", "enrolledDate": "2026-06-01", "lastAccessed": "2026-07-23" },
+  { "id": "sc2", "name": "Cell Biology Deep Dive", "subject": "Science", "grade": "Grade 9", "teacherName": "Arjun Nair", "thumbnailColor": "emerald", "enrolledDate": "2026-05-15", "lastAccessed": "2026-07-10" },
+  { "id": "sc3", "name": "World History: Ancient Civilizations", "subject": "History", "grade": "Grade 9", "teacherName": "Rohan Verma", "thumbnailColor": "amber", "enrolledDate": "2026-06-10", "lastAccessed": "2026-07-20" },
+  { "id": "sc4", "name": "Python Programming Basics", "subject": "Computer Science", "grade": "Grade 9", "teacherName": "Ananya Reddy", "thumbnailColor": "violet", "enrolledDate": "2026-07-01", "lastAccessed": "2026-07-15" },
+  { "id": "sc5", "name": "Creative Writing Workshop", "subject": "English", "grade": "Grade 9", "teacherName": "Meera Iyer", "thumbnailColor": "rose", "enrolledDate": "2026-07-18", "lastAccessed": null }
+]
