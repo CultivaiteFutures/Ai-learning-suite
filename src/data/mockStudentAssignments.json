@@ -1,6 +1,0 @@
-[
-  { "id": "sa1", "courseId": "sc1", "courseName": "Algebra Foundations", "title": "Linear Equations Quiz", "dueDate": "2026-07-28", "type": "Quiz" },
-  { "id": "sa2", "courseId": "sc3", "courseName": "World History: Ancient Civilizations", "title": "Ancient Egypt Essay", "dueDate": "2026-07-30", "type": "Homework" },
-  { "id": "sa3", "courseId": "sc4", "courseName": "Python Programming Basics", "title": "Build a Calculator App", "dueDate": "2026-08-15", "type": "Project" },
-  { "id": "sa4", "courseId": "sc1", "courseName": "Algebra Foundations", "title": "Algebra Practice Set 3", "dueDate": "2026-07-26", "type": "Homework" }
-]

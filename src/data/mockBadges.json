@@ -1,8 +1,0 @@
-[
-  { "id": "b1", "name": "First Steps", "description": "Complete your first lesson", "icon": "Footprints", "earned": true, "earnedDate": "2026-06-02" },
-  { "id": "b2", "name": "Quiz Whiz", "description": "Score well on 3 quizzes", "icon": "Brain", "earned": true, "earnedDate": "2026-06-20" },
-  { "id": "b3", "name": "Streak Starter", "description": "Maintain a 3-day learning streak", "icon": "Flame", "earned": true, "earnedDate": "2026-07-01" },
-  { "id": "b4", "name": "Course Champion", "description": "Complete an entire course", "icon": "Trophy", "earned": true, "earnedDate": "2026-07-10" },
-  { "id": "b5", "name": "Night Owl", "description": "Complete a lesson after 8 PM", "icon": "Moon", "earned": false },
-  { "id": "b6", "name": "Perfect Week", "description": "Hit your daily goal every day for a week", "icon": "CalendarCheck", "earned": false }
-]

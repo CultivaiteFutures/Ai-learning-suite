@@ -1,6 +1,12 @@
-﻿node_modules/
-dist/
+@"
+node_modules/
+Frontend/node_modules/
+Backend/venv/
+Backend/.venv/
+__pycache__/
+*.pyc
 .env
 .env.*
 !.env.example
-.vite/
+dist/
+"@ | Set-Content .gitignore

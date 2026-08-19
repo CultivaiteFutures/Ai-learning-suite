@@ -1,5 +1,0 @@
-[
-  { "id": "gt-001", "name": "Algebra Foundations", "subject": "Mathematics", "grade": "Grade 9", "description": "A platform-curated master template covering variables, linear equations, and graphing basics.", "modulesCount": 5, "lessonsCount": 15, "status": "published", "createdDate": "2026-01-10" },
-  { "id": "gt-002", "name": "Cell Biology Essentials", "subject": "Science", "grade": "Grade 9", "description": "Master template covering cell structure, function, and division for a standard biology unit.", "modulesCount": 4, "lessonsCount": 12, "status": "published", "createdDate": "2026-02-05" },
-  { "id": "gt-003", "name": "World History Survey", "subject": "History", "grade": "Grade 8", "description": "A broad survey template covering ancient civilizations through the early modern era.", "modulesCount": 6, "lessonsCount": 18, "status": "published", "createdDate": "2026-03-01" }
-]

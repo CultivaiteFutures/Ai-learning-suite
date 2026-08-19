@@ -1,7 +1,0 @@
-[
-  { "id": "act-001", "schoolId": "sch-002", "type": "school_created", "message": "Greenwood High School was onboarded to the platform.", "timestamp": "2025-08-14T09:12:00.000Z" },
-  { "id": "act-002", "schoolId": "sch-003", "type": "school_suspended", "message": "Riverside Public School was suspended due to expired subscription.", "timestamp": "2026-07-16T11:30:00.000Z" },
-  { "id": "act-003", "schoolId": "sch-004", "type": "school_created", "message": "Sunrise International Academy started a Trial plan.", "timestamp": "2026-07-10T14:05:00.000Z" },
-  { "id": "act-004", "schoolId": "sch-002", "type": "subscription_changed", "message": "Greenwood High School upgraded from Basic to Premium.", "timestamp": "2026-06-20T16:45:00.000Z" },
-  { "id": "act-005", "schoolId": "sch-005", "type": "school_created", "message": "Maple Leaf Elementary was onboarded and is pending admin activation.", "timestamp": "2026-07-22T10:00:00.000Z" }
-]

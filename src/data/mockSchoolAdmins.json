@@ -1,6 +1,0 @@
-[
-  { "id": "sadm-002", "name": "Ramesh Iyer Admin", "email": "admin@ghs102.edu", "role": "admin", "schoolId": "sch-002", "schoolName": "Greenwood High School", "tempPassword": "GHS-Temp1!" },
-  { "id": "sadm-003", "name": "Sunita Rao Admin", "email": "admin@rps203.edu", "role": "admin", "schoolId": "sch-003", "schoolName": "Riverside Public School", "tempPassword": "RPS-Temp1!" },
-  { "id": "sadm-004", "name": "Farhan Ahmed Admin", "email": "admin@sia304.edu", "role": "admin", "schoolId": "sch-004", "schoolName": "Sunrise International Academy", "tempPassword": "SIA-Temp1!" },
-  { "id": "sadm-005", "name": "Kavya Subramaniam Admin", "email": "admin@mle405.edu", "role": "admin", "schoolId": "sch-005", "schoolName": "Maple Leaf Elementary", "tempPassword": "MLE-Temp1!" }
-]

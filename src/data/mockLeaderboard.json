@@ -1,7 +1,0 @@
-[
-  { "rank": 1, "name": "Anaya Joshi", "xp": 2840, "initials": "AJ", "isCurrentUser": false },
-  { "rank": 2, "name": "Myra Kulkarni", "xp": 2695, "initials": "MK", "isCurrentUser": false },
-  { "rank": 3, "name": "You", "xp": 2510, "initials": "AM", "isCurrentUser": true },
-  { "rank": 4, "name": "Kabir Chaudhary", "xp": 2380, "initials": "KC", "isCurrentUser": false },
-  { "rank": 5, "name": "Diya Bansal", "xp": 2210, "initials": "DB", "isCurrentUser": false }
-]
