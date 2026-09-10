@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str = "superadmin@system.com"
     FIRST_SUPERUSER_PASSWORD: str = "password123"
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "*"]
+    # Task #62: SSO scaffolding -- used to build the OAuth redirect_uri
+    # (must be registered with each provider) and where the callback sends
+    # the browser back to after issuing our own JWT.
+    PUBLIC_API_BASE_URL: str = "http://localhost:8000"
+    FRONTEND_URL: str = "http://localhost:5173"
 
     @validator("DATABASE_URL", pre=True)
     def fix_database_url(cls, v: str) -> str:

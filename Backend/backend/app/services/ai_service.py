@@ -91,4 +91,18 @@ class AIService:
             max_points=max_points
         )
 
+    def grade_submission_with_rubric(
+        self,
+        submission_text: str,
+        criteria: List[Dict[str, Any]],
+        assignment_title: str = "",
+        provider: Optional[str] = None
+    ) -> Dict[str, Any]:
+        p = self._get_provider(provider)
+        return p.grade_submission_with_rubric(
+            submission_text=submission_text,
+            criteria=criteria,
+            assignment_title=assignment_title
+        )
+
 ai_service = AIService()

@@ -1,19 +1,116 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Pencil, Trash2, Plus, Users, BookOpen, Calendar, Key, Copy, Check } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Plus, Users, BookOpen, Calendar, Key, Copy, Check, UserPlus, X } from "lucide-react";
 import StatusBadge from "../../components/common/StatusBadge";
 import DataTable from "../../components/table/DataTable";
 import EmptyState from "../../components/common/EmptyState";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 import AssignmentFormModal from "../../components/teacher/AssignmentFormModal";
 import { useCourses } from "../../context/CourseContext";
+import { useAuth } from "../../hooks/useAuth";
 import { teacherAPI } from "../../services/api";
+
+function CoTeachersPanel({ courseId, isOwner }) {
+  const [coTeachers, setCoTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState("");
+
+  function load() {
+    setLoading(true);
+    teacherAPI
+      .getCoTeachers(courseId)
+      .then((res) => setCoTeachers(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setError("Could not load co-teachers."))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
+  function handleAdd(e) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setAdding(true);
+    setError("");
+    teacherAPI
+      .addCoTeacher(courseId, email.trim())
+      .then((res) => {
+        setCoTeachers((prev) => [...prev, res.data]);
+        setEmail("");
+      })
+      .catch((err) => setError(err.response?.data?.detail || "Could not add this teacher."))
+      .finally(() => setAdding(false));
+  }
+
+  function handleRemove(teacherId) {
+    teacherAPI
+      .removeCoTeacher(courseId, teacherId)
+      .then(() => setCoTeachers((prev) => prev.filter((c) => c.teacherId !== teacherId)))
+      .catch(() => setError("Could not remove this co-teacher."));
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="border-b border-slate-100 px-5 py-4">
+        <h2 className="text-sm font-semibold text-slate-900">Co-Teachers</h2>
+        <p className="mt-0.5 text-xs text-slate-400">Other teachers with full manage access to this course.</p>
+      </div>
+
+      <div className="px-5 py-4">
+        {error && <p className="mb-3 text-xs font-medium text-rose-600">{error}</p>}
+
+        {loading ? (
+          <p className="text-xs text-slate-400">Loading...</p>
+        ) : coTeachers.length === 0 ? (
+          <p className="text-xs text-slate-400">No co-teachers yet.</p>
+        ) : (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {coTeachers.map((c) => (
+              <span key={c.teacherId} className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
+                {c.name}
+                {isOwner && (
+                  <button type="button" onClick={() => handleRemove(c.teacherId)} className="text-slate-400 hover:text-rose-600">
+                    <X size={12} />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {isOwner && (
+          <form onSubmit={handleAdd} className="flex items-center gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="teacher@school.edu"
+              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={adding}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              <UserPlus size={14} /> Add
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function CourseDetailsPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { getCourseById, deleteCourse, getAssignmentsByCourse, addAssignment, updateAssignment, deleteAssignment } =
+  const { getCourseById, deleteCourse, getAssignmentsByCourse, addAssignment, updateAssignment, deleteAssignment, courseError, clearCourseError, coursesLoading } =
     useCourses();
+  const { user, role } = useAuth();
 
   const course = getCourseById(courseId);
 
@@ -23,15 +120,25 @@ export default function CourseDetailsPage() {
   const [deleteCourseOpen, setDeleteCourseOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
-    teacherAPI.getStudents().then((res) => {
+    // Real per-course roster from Enrollment records -- not a grade-level approximation.
+    teacherAPI.getCourseStudents(courseId).then((res) => {
       if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
       }
-    }).catch(() => {});
-  }, []);
+    }).catch(() => {}).finally(() => setStudentsLoading(false));
+  }, [courseId]);
+
+  if (!course && coursesLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm text-slate-400">
+        Loading course...
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -48,10 +155,10 @@ export default function CourseDetailsPage() {
   }
 
   const assignments = getAssignmentsByCourse(course.id);
-  const enrolledStudents = students.filter((s) => !course.grade || s.grade === course.grade);
-  const joinCode = course.joinCode || course.join_code || "AI7K92";
+  const joinCode = course.joinCode || course.join_code || "";
 
   function copyJoinCode() {
+    if (!joinCode) return;
     navigator.clipboard.writeText(joinCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
@@ -68,12 +175,11 @@ export default function CourseDetailsPage() {
   }
 
   function handleSaveAssignment(data) {
-    if (editingAssignment) {
-      updateAssignment(editingAssignment.id, data);
-    } else {
-      addAssignment({ ...data, courseId: course.id });
-    }
+    const result = editingAssignment
+      ? updateAssignment(editingAssignment.id, data)
+      : addAssignment({ ...data, courseId: course.id });
     setAssignmentModalOpen(false);
+    return result;
   }
 
   function confirmDeleteAssignment() {
@@ -81,13 +187,15 @@ export default function CourseDetailsPage() {
     setDeleteAssignmentTarget(null);
   }
 
-  function confirmDeleteCourse() {
+  async function confirmDeleteCourse() {
     setDeleting(true);
-    setTimeout(() => {
-      deleteCourse(course.id);
-      setDeleting(false);
+    const ok = await deleteCourse(course.id);
+    setDeleting(false);
+    if (ok) {
       navigate("/teacher/courses");
-    }, 500);
+    } else {
+      setDeleteCourseOpen(false);
+    }
   }
 
   const assignmentColumns = [
@@ -136,6 +244,14 @@ export default function CourseDetailsPage() {
 
   return (
     <div className="space-y-6">
+      {courseError && (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <span>{courseError}</span>
+          <button onClick={clearCourseError} className="font-medium text-rose-600 hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
       <div>
         <Link
           to="/teacher/courses"
@@ -197,7 +313,8 @@ export default function CourseDetailsPage() {
             </h2>
             <button
               onClick={copyJoinCode}
-              className="flex items-center gap-1 rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-indigo-700"
+              disabled={!joinCode}
+              className="flex items-center gap-1 rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {copiedCode ? <Check size={13} /> : <Copy size={13} />}
               {copiedCode ? "Copied!" : "Copy Code"}
@@ -205,7 +322,11 @@ export default function CourseDetailsPage() {
           </div>
           <p className="mt-2 text-xs text-indigo-700">Share this code with students to let them enroll in this course.</p>
           <div className="mt-3 rounded-lg border border-indigo-200 bg-white py-3 text-center">
-            <span className="font-mono text-2xl font-black tracking-widest text-indigo-900">{joinCode}</span>
+            {joinCode ? (
+              <span className="font-mono text-2xl font-black tracking-widest text-indigo-900">{joinCode}</span>
+            ) : (
+              <span className="text-sm font-medium text-slate-400">No join code available</span>
+            )}
           </div>
         </div>
       </div>
@@ -236,13 +357,18 @@ export default function CourseDetailsPage() {
         </div>
         <DataTable
           columns={studentColumns}
-          data={enrolledStudents}
-          loading={false}
+          data={students}
+          loading={studentsLoading}
           keyExtractor={(row) => row.id}
           emptyTitle="No students enrolled yet"
           emptyDescription="Students will appear here once they join using the Course Join Code."
         />
       </div>
+
+      <CoTeachersPanel
+        courseId={course.id}
+        isOwner={role === "admin" || (user && user.id === course.createdById)}
+      />
 
       <AssignmentFormModal
         isOpen={assignmentModalOpen}

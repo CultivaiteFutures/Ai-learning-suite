@@ -8,7 +8,7 @@ export function StudentProgressProvider({ children }) {
   const [studentCourses, setStudentCourses] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [stats, setStats] = useState({ xp: 0, streakDays: 0, minutesToday: 0 });
+  const [stats, setStats] = useState({ xp: 0, streakDays: 0, minutesToday: 0, badges: [] });
 
   // Fetch real enrolled courses, assignments, and student stats exclusively from FastAPI backend
   const refreshEnrolledCourses = async () => {
@@ -22,6 +22,7 @@ export function StudentProgressProvider({ children }) {
           ...prev,
           xp: resStats.data.xp !== undefined ? resStats.data.xp : prev.xp,
           streakDays: resStats.data.streak_days !== undefined ? resStats.data.streak_days : prev.streakDays,
+          badges: Array.isArray(resStats.data.badges) ? resStats.data.badges : prev.badges,
         }));
       }
 
@@ -35,7 +36,7 @@ export function StudentProgressProvider({ children }) {
           subject: c.subject,
           grade: c.grade_level || c.grade,
           joinCode: c.join_code || c.joinCode,
-          enrolledDate: c.created_at ? c.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+          enrolledDate: c.createdAt ? c.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
           lastAccessed: new Date().toISOString(),
           modules: c.modules || []
         }));
@@ -50,11 +51,17 @@ export function StudentProgressProvider({ children }) {
                 id: l.id,
                 courseId: c.id,
                 moduleId: m.id,
+                moduleTitle: m.title || m.name || `Module`,
                 title: l.title || l.name,
                 content: l.content || "",
-                durationMinutes: l.duration_minutes || 30,
+                summary: l.summary || l.description || "",
+                durationMinutes: l.duration_minutes || l.durationMinutes || 30,
                 completed: false,
-                order: lIdx
+                order: lIdx,
+                type: l.type || (l.quiz ? "quiz" : "reading"),
+                activities: l.activities || null,
+                quiz: l.quiz || null,
+                homework: l.homework || null
               });
             });
           });
@@ -69,11 +76,11 @@ export function StudentProgressProvider({ children }) {
       if (resAssignments.data && Array.isArray(resAssignments.data)) {
         setAssignments(resAssignments.data.map((a) => ({
           id: a.id,
-          courseId: a.course_id,
+          courseId: a.courseId,
           title: a.title,
           description: a.description,
-          dueDate: a.due_date ? a.due_date.slice(0, 10) : "",
-          maxPoints: a.max_points || 100,
+          dueDate: a.dueDate ? a.dueDate.slice(0, 10) : "",
+          maxPoints: a.maxPoints || 100,
         })));
       }
     } catch (err) {
@@ -186,6 +193,7 @@ export function StudentProgressProvider({ children }) {
         xpIntoLevel,
         streakDays: stats.streakDays,
         minutesToday: stats.minutesToday,
+        badges: stats.badges,
         dailyGoalMinutes: DAILY_GOAL_MINUTES,
       }}
     >

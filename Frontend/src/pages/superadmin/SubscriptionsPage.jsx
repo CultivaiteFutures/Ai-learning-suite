@@ -12,7 +12,7 @@ import PrimaryButton from "../../components/ui/PrimaryButton";
 import { useSchools } from "../../context/SchoolContext";
 import { useDataTable } from "../../hooks/useDataTable";
 
-const PLAN_OPTIONS = ["Trial", "Basic", "Premium", "Enterprise"].map((p) => ({ value: p, label: p }));
+const PLAN_OPTIONS = ["Trial", "Basic", "Professional", "Premium", "Enterprise"].map((p) => ({ value: p, label: p }));
 const STATUS_OPTIONS = [
   { value: "active", label: "Active" }, { value: "expired", label: "Expired" }, { value: "cancelled", label: "Cancelled" },
 ];
@@ -22,6 +22,7 @@ export default function SubscriptionsPage() {
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const enriched = useMemo(
     () => subscriptions.map((s) => ({ ...s, schoolName: schools.find((sc) => sc.id === s.schoolId)?.schoolName || "Unknown" })),
@@ -45,7 +46,15 @@ export default function SubscriptionsPage() {
 
   function openChangePlan(row) {
     setEditing(row);
-    setFormData({ plan: row.plan, status: row.status, expiryDate: row.expiryDate, renewalDate: row.renewalDate, studentLimit: String(row.studentLimit), teacherLimit: String(row.teacherLimit) });
+    setSaveError("");
+    setFormData({
+      plan: row.plan,
+      status: row.status,
+      expiryDate: row.expiryDate || "",
+      renewalDate: row.renewalDate || "",
+      studentLimit: row.studentLimit != null ? String(row.studentLimit) : "",
+      teacherLimit: row.teacherLimit != null ? String(row.teacherLimit) : "",
+    });
   }
 
   function handleFieldChange(e) {
@@ -53,13 +62,17 @@ export default function SubscriptionsPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     setSaving(true);
-    setTimeout(() => {
-      updateSubscription(editing.schoolId, { ...formData, studentLimit: Number(formData.studentLimit), teacherLimit: Number(formData.teacherLimit) });
+    setSaveError("");
+    try {
+      await updateSubscription(editing.schoolId, { plan: formData.plan, status: formData.status });
       setSaving(false);
       setEditing(null);
-    }, 400);
+    } catch (err) {
+      setSaving(false);
+      setSaveError(err?.response?.data?.detail || "Failed to update subscription. Please try again.");
+    }
   }
 
   const columns = [
@@ -122,6 +135,9 @@ export default function SubscriptionsPage() {
               <InputField label="Student Limit" name="studentLimit" type="number" value={formData.studentLimit} onChange={handleFieldChange} />
               <InputField label="Teacher Limit" name="teacherLimit" type="number" value={formData.teacherLimit} onChange={handleFieldChange} />
             </div>
+            {saveError && (
+              <p className="text-sm text-rose-600">{saveError}</p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setEditing(null)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
               <div className="w-32"><PrimaryButton onClick={handleSave} loading={saving}>Save</PrimaryButton></div>

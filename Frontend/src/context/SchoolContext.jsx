@@ -5,53 +5,89 @@ import { superAdminAPI } from "../services/api";
 
 const SchoolContext = createContext(null);
 
+// Maps a raw (camelCase) subscription record from GET/PUT /super-admin/subscriptions
+// into the shape the Super Admin subscription UI expects. Fields the backend
+// Subscription model does not store (renewalDate, studentLimit, teacherLimit)
+// are intentionally left undefined rather than fabricated.
+function mapSubscription(s) {
+  return {
+    id: s.id,
+    schoolId: s.schoolId,
+    schoolName: s.schoolName,
+    plan: s.plan,
+    status: s.status,
+    startedDate: s.startDate ? String(s.startDate).slice(0, 10) : undefined,
+    expiryDate: s.endDate ? String(s.endDate).slice(0, 10) : undefined,
+  };
+}
+
 export function SchoolProvider({ children }) {
   const [schools, setSchools] = useState([]);
+  // True until the initial GET /super-admin/schools resolves (or there's no
+  // token to fetch with). A page keyed by school id -- e.g. SchoolDetailsPage
+  // -- must wait for this before concluding "school not found", otherwise a
+  // hard refresh/direct link always bounces a real school back to the list
+  // because `schools` is still its initial empty array on first render.
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
   const [subscriptions, setSubscriptions] = useState([]);
-  const [goldenTemplates, setGoldenTemplates] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
   const [schoolAdmins, setSchoolAdmins] = useState([]);
 
-  // Sync state exclusively with FastAPI backend whenever token is active
+  // Sync state with FastAPI backend based on authenticated user role
   useEffect(() => {
     const token = localStorage.getItem("token") || localStorage.getItem("ails_token");
-    if (!token) return;
+    if (!token) {
+      setSchoolsLoading(false);
+      return;
+    }
 
-    superAdminAPI.getSchools().then((res) => {
-      if (res.data && Array.isArray(res.data)) {
-        const fetched = res.data.map((s) => ({
-          id: s.id,
-          schoolName: s.name || s.schoolName,
-          domain: s.domain,
-          status: s.is_active ? "active" : "suspended",
-          createdDate: s.created_at ? s.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
-          studentCount: s.student_count || s.studentCount || 0,
-          teacherCount: s.teacher_count || s.teacherCount || 0,
-          courseCount: s.course_count || s.courseCount || 0,
-          subscriptionPlan: s.subscription_plan || s.subscriptionPlan || "Professional",
-          monthlyActiveUsers: (s.student_count || 0) + (s.teacher_count || 0),
-          aiUsageCount: 0,
-        }));
-        setSchools(fetched);
+    let userRole = "";
+    try {
+      const storedUser = localStorage.getItem("ails_auth_user") || localStorage.getItem("user");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        userRole = (parsed.role || "").toLowerCase();
       }
-    }).catch(() => {});
+    } catch {}
 
-    superAdminAPI.getGoldenTemplates().then((res) => {
-      if (res.data && Array.isArray(res.data)) {
-        const fetchedT = res.data.map((t) => ({
-          id: t.id,
-          name: t.title || t.name,
-          subject: t.subject,
-          grade: t.grade_level || t.grade,
-          description: t.description,
-          status: t.is_published ? "published" : "draft",
-          modulesCount: (t.modules || []).length,
-          lessonsCount: (t.modules || []).reduce((sum, m) => sum + (m.lessons?.length || 0), 0),
-          modules: t.modules || [],
-        }));
-        setGoldenTemplates(fetchedT);
-      }
-    }).catch(() => {});
+    // Only super_admin is authorized to call superAdminAPI endpoints
+    if (userRole === "super_admin" || userRole === "superadmin") {
+      superAdminAPI.getSchools().then((res) => {
+        if (res.data && Array.isArray(res.data)) {
+          const fetched = res.data.map((s) => ({
+            id: s.id,
+            schoolName: s.name || s.schoolName,
+            domain: s.domain,
+            status: s.isActive ? "active" : "suspended",
+            createdDate: s.createdAt ? s.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+            studentCount: s.student_count || s.studentCount || 0,
+            teacherCount: s.teacher_count || s.teacherCount || 0,
+            courseCount: s.course_count || s.courseCount || 0,
+            adminName: s.admin_name || s.adminName || s.admin_user?.full_name || "School Admin",
+            adminEmail: s.admin_email || s.adminEmail || s.admin_user?.email || `admin@${s.domain || "school.edu"}`,
+            adminId: s.admin_id || s.adminId || s.admin_user?.id,
+            adminUser: s.admin_user || s.adminUser,
+            aiProvider: s.ai_provider || s.aiProvider || "gemini",
+            subscriptionPlan: s.subscription_plan || s.subscriptionPlan || "Professional",
+            monthlyActiveUsers: (s.student_count || s.studentCount || 0) + (s.teacher_count || s.teacherCount || 0),
+            aiUsageCount: 0,
+          }));
+          setSchools(fetched);
+        }
+        setSchoolsLoading(false);
+      }).catch(() => {
+        setSchoolsLoading(false);
+      });
+
+      superAdminAPI.getSubscriptions().then((res) => {
+        if (res.data && Array.isArray(res.data)) {
+          setSubscriptions(res.data.map(mapSubscription));
+        }
+      }).catch(() => {});
+    } else {
+      // Non-super-admin roles never call getSchools -- nothing to wait for.
+      setSchoolsLoading(false);
+    }
   }, []);
 
   function logActivity(schoolId, type, message) {
@@ -66,20 +102,16 @@ export function SchoolProvider({ children }) {
 
     setSchools((prev) => [school, ...prev]);
     setSchoolAdmins((prev) => [...prev, admin]);
-    setSubscriptions((prev) => [
-      {
-        id: generateId(),
-        schoolId: school.id,
-        plan: school.subscriptionPlan,
-        status: "active",
-        startedDate: school.createdDate,
-        expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().slice(0, 10),
-        renewalDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().slice(0, 10),
-        studentLimit: school.studentLimit,
-        teacherLimit: school.teacherLimit,
-      },
-      ...prev,
-    ]);
+
+    // The backend creates the real Subscription row as part of school creation;
+    // re-fetch the authoritative list rather than fabricating one locally.
+    try {
+      const subsRes = await superAdminAPI.getSubscriptions();
+      if (subsRes.data && Array.isArray(subsRes.data)) {
+        setSubscriptions(subsRes.data.map(mapSubscription));
+      }
+    } catch {}
+
     logActivity(school.id, "school_created", `${school.schoolName} was onboarded to the platform.`);
 
     return { school, admin };
@@ -122,69 +154,17 @@ export function SchoolProvider({ children }) {
     return subscriptions.find((s) => s.schoolId === schoolId) || null;
   }
 
-  function updateSubscription(schoolId, data) {
-    setSubscriptions((prev) => prev.map((s) => (s.schoolId === schoolId ? { ...s, ...data } : s)));
-    logActivity(schoolId, "subscription_changed", `Subscription plan updated to ${data.plan || "a new plan"}.`);
-  }
+  async function updateSubscription(schoolId, data) {
+    const payload = {};
+    if (data.plan !== undefined) payload.plan = data.plan;
+    if (data.status !== undefined) payload.status = data.status;
+    if (data.endDate !== undefined) payload.end_date = data.endDate;
 
-  async function adoptGoldenTemplate(templateId, schoolId) {
-    const template = goldenTemplates.find((t) => t.id === templateId);
-    if (!template) return null;
-    const courseCopy = await schoolService.adoptGoldenTemplate(template, schoolId);
-    const school = getSchoolById(schoolId);
-    logActivity(schoolId, "template_adopted", `${school?.schoolName || "A school"} adopted Golden Source template "${template.name}".`);
-    return courseCopy;
-  }
-
-  async function addGoldenTemplate(data) {
-    try {
-      const payload = {
-        title: data.name || data.title,
-        description: data.description || "",
-        subject: data.subject || "General",
-        grade_level: data.grade || data.grade_level || "Grade 10",
-        language: data.language || "English",
-        difficulty: data.difficulty || "Medium",
-        modules: data.modules || []
-      };
-
-      const res = await superAdminAPI.createGoldenTemplate(payload);
-      const created = res.data;
-      const templateItem = {
-        id: created.id,
-        name: created.title || created.name,
-        subject: created.subject,
-        grade: created.grade_level || created.grade,
-        description: created.description,
-        status: created.is_published ? "published" : "draft",
-        modules: created.modules || [],
-        modulesCount: (created.modules || []).length,
-        lessonsCount: (created.modules || []).reduce((sum, m) => sum + (m.lessons?.length || 0), 0),
-        createdDate: created.created_at ? created.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
-      };
-      setGoldenTemplates((prev) => [templateItem, ...prev.filter((t) => t.id !== created.id)]);
-      return templateItem;
-    } catch (err) {
-      console.error("Error creating golden template:", err);
-      const template = {
-        id: generateId(),
-        status: "published",
-        createdDate: new Date().toISOString().slice(0, 10),
-        modulesCount: Number(data.modulesCount) || 4,
-        lessonsCount: Number(data.lessonsCount) || 12,
-        ...data
-      };
-      setGoldenTemplates((prev) => [template, ...prev]);
-      return template;
-    }
-  }
-
-  function updateGoldenTemplate(id, data) {
-    setGoldenTemplates((prev) => prev.map((t) => (t.id === id ? { ...t, ...data } : t)));
-  }
-
-  function deleteGoldenTemplate(id) {
-    setGoldenTemplates((prev) => prev.filter((t) => t.id !== id));
+    const res = await superAdminAPI.updateSubscription(schoolId, payload);
+    const updated = mapSubscription(res.data);
+    setSubscriptions((prev) => prev.map((s) => (s.schoolId === schoolId ? updated : s)));
+    logActivity(schoolId, "subscription_changed", `Subscription plan updated to ${updated.plan || "a new plan"}.`);
+    return updated;
   }
 
   const platformStats = useMemo(() => {
@@ -214,10 +194,9 @@ export function SchoolProvider({ children }) {
   return (
     <SchoolContext.Provider
       value={{
-        schools, subscriptions, goldenTemplates, activityLogs, platformStats,
+        schools, schoolsLoading, subscriptions, activityLogs, platformStats,
         addSchool, updateSchool, suspendSchool, activateSchool, deleteSchool,
         getSchoolById, getSubscriptionBySchool, updateSubscription,
-        adoptGoldenTemplate, addGoldenTemplate, updateGoldenTemplate, deleteGoldenTemplate,
       }}
     >
       {children}

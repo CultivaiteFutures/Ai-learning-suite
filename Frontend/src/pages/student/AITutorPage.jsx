@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Menu, Bot } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Menu, Bot, BookOpen } from "lucide-react";
 import ChatSidebar from "../../components/tutor/ChatSidebar";
 import ChatMessage from "../../components/tutor/ChatMessage";
 import SuggestedQuestions from "../../components/tutor/SuggestedQuestions";
@@ -7,11 +7,31 @@ import QuickPrompts from "../../components/tutor/QuickPrompts";
 import ChatInput from "../../components/tutor/ChatInput";
 import ThemeToggle from "../../components/tutor/ThemeToggle";
 import { useTutorChat } from "../../context/TutorChatContext";
+import { useStudentProgress } from "../../context/StudentProgressContext";
 
 export default function AITutorPage() {
   const { activeSession, sendMessage, isSending, isDark, toggleTheme } = useTutorChat();
+  const { courses, getLessonsByCourse } = useStudentProgress();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef(null);
+
+  // Optional grounding context -- same idea as the course/unit picker teachers
+  // already get in the AI course-builder tools. Left blank, the tutor answers
+  // generally; picking a course (and optionally a specific lesson) makes the
+  // AI ground its answer in that course's real curriculum content, using the
+  // same securely-scoped course_id/lesson_id the backend already supports.
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedLessonId, setSelectedLessonId] = useState("");
+
+  const lessonsForSelectedCourse = useMemo(
+    () => (selectedCourseId ? getLessonsByCourse(selectedCourseId) : []),
+    [selectedCourseId, getLessonsByCourse]
+  );
+
+  function handleCourseChange(e) {
+    setSelectedCourseId(e.target.value);
+    setSelectedLessonId("");
+  }
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -22,8 +42,17 @@ export default function AITutorPage() {
   const hasMessages = activeSession && activeSession.messages.length > 0;
 
   function handleSend(text, attachment) {
-    sendMessage(text, attachment);
+    sendMessage(text, attachment, {
+      courseId: selectedCourseId || null,
+      lessonId: selectedLessonId || null,
+    });
   }
+
+  const selectClasses = `rounded-lg border px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 ${
+    isDark
+      ? "border-slate-700 bg-slate-800 text-slate-200 focus:ring-indigo-500/30"
+      : "border-slate-200 bg-slate-50 text-slate-700 focus:ring-indigo-100"
+  }`;
 
   return (
     <div
@@ -37,27 +66,53 @@ export default function AITutorPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <div
-          className={`flex items-center justify-between border-b px-4 py-3 sm:px-6 ${
+          className={`flex flex-col gap-2 border-b px-4 py-3 sm:px-6 ${
             isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
           }`}
         >
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className={`rounded-md p-1.5 lg:hidden ${isDark ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"}`}
-            >
-              <Menu size={20} />
-            </button>
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? "bg-indigo-500/10 text-indigo-400" : "bg-indigo-50 text-indigo-600"}`}>
-              <Bot size={16} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className={`rounded-md p-1.5 lg:hidden ${isDark ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"}`}
+              >
+                <Menu size={20} />
+              </button>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? "bg-indigo-500/10 text-indigo-400" : "bg-indigo-50 text-indigo-600"}`}>
+                <Bot size={16} />
+              </div>
+              <div>
+                <p className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>AI Tutor</p>
+                <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>Always here to help you learn</p>
+              </div>
             </div>
-            <div>
-              <p className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>AI Tutor</p>
-              <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>Always here to help you learn</p>
-            </div>
+
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
           </div>
 
-          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+          {/* Course/unit grounding picker */}
+          <div className="flex flex-wrap items-center gap-2 pl-1">
+            <BookOpen size={13} className={isDark ? "text-slate-500" : "text-slate-400"} />
+            <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>Ground answers in:</span>
+            <select value={selectedCourseId} onChange={handleCourseChange} className={selectClasses}>
+              <option value="">General help (no specific course)</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>{c.name || c.title}</option>
+              ))}
+            </select>
+            {selectedCourseId && (
+              <select
+                value={selectedLessonId}
+                onChange={(e) => setSelectedLessonId(e.target.value)}
+                className={selectClasses}
+              >
+                <option value="">Whole course</option>
+                {lessonsForSelectedCourse.map((l) => (
+                  <option key={l.id} value={l.id}>{l.title}</option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
 
         {/* Messages */}

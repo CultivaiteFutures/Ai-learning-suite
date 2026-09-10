@@ -1,22 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { ArrowLeft, Pencil, Building2, Mail, Phone, MapPin, Users, GraduationCap, BookOpen, Activity } from "lucide-react";
 import SchoolStatusBadge from "../../components/superadmin/SchoolStatusBadge";
 import SubscriptionBadge from "../../components/superadmin/SubscriptionBadge";
 import SchoolFormModal from "../../components/superadmin/SchoolFormModal";
+import SupportToolsPanel from "../../components/superadmin/SupportToolsPanel";
 import DataTable from "../../components/table/DataTable";
 import EmptyState from "../../components/common/EmptyState";
 import { useSchools } from "../../context/SchoolContext";
+import { superAdminAPI } from "../../services/api";
 
-const TABS = ["Overview", "School Information", "Admin Information", "Teachers", "Students", "Courses", "Usage Statistics", "Subscription", "Activity Timeline"];
+const TABS = ["Overview", "School Information", "Admin Information", "Teachers", "Students", "Courses", "Usage Statistics", "Subscription", "Activity Timeline", "Support Tools"];
 
 export default function SchoolDetailsPage() {
   const { schoolId } = useParams();
-  const { getSchoolById, getSubscriptionBySchool, updateSchool, activityLogs } = useSchools();
+  const { getSchoolById, schoolsLoading, getSubscriptionBySchool, updateSchool, activityLogs } = useSchools();
   const [activeTab, setActiveTab] = useState("Overview");
   const [editOpen, setEditOpen] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [listsLoading, setListsLoading] = useState(true);
 
   const school = getSchoolById(schoolId);
+
+  useEffect(() => {
+    let cancelled = false;
+    setListsLoading(true);
+    Promise.all([
+      superAdminAPI.getSchoolTeachers(schoolId),
+      superAdminAPI.getSchoolStudents(schoolId),
+      superAdminAPI.getSchoolCourses(schoolId),
+    ])
+      .then(([teachersRes, studentsRes, coursesRes]) => {
+        if (cancelled) return;
+        setTeachers(teachersRes.data || []);
+        setStudents(studentsRes.data || []);
+        setCourses(coursesRes.data || []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTeachers([]);
+        setStudents([]);
+        setCourses([]);
+      })
+      .finally(() => {
+        if (!cancelled) setListsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [schoolId]);
+
+  // Wait for the initial schools fetch before concluding this id doesn't
+  // exist -- on a hard refresh/direct link, `schools` starts empty and this
+  // would otherwise incorrectly bounce a real school back to the list.
+  if (!school && schoolsLoading) {
+    return <div className="flex h-64 items-center justify-center text-sm text-slate-400">Loading school...</div>;
+  }
   if (!school) return <Navigate to="/super-admin/schools" replace />;
 
   const subscription = getSubscriptionBySchool(schoolId);
@@ -41,20 +82,53 @@ export default function SchoolDetailsPage() {
 
       case "School Information":
         return (
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InfoRow icon={Mail} label="Contact Email" value={school.email} />
-              <InfoRow icon={Phone} label="Phone" value={school.phone} />
-              <InfoRow icon={MapPin} label="Address" value={`${school.address || ""}, ${school.city || ""}, ${school.state || ""}, ${school.country || ""}`} />
-              <InfoRow icon={Building2} label="Principal" value={school.principalName} />
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <InfoRow icon={Building2} label="School Name" value={school.schoolName || school.name} />
+              <InfoRow icon={Mail} label="Domain / URL" value={school.domain || "—"} />
+              <InfoRow icon={Activity} label="AI Engine Provider" value={school.aiProvider === "gemini" ? "Google Gemini (Active)" : "Anthropic Claude"} />
+              <InfoRow icon={Building2} label="Subscription Plan" value={school.subscriptionPlan || "Professional"} />
+              <InfoRow icon={Mail} label="Contact Email" value={school.email || school.adminEmail || "—"} />
+              <InfoRow icon={Phone} label="Phone Number" value={school.phone || "—"} />
+              <InfoRow icon={MapPin} label="Full Address" value={[school.address, school.city, school.state, school.country].filter(Boolean).join(", ") || "—"} />
+              <InfoRow icon={Users} label="School Status" value={school.status === "active" ? "Active" : "Suspended"} />
             </div>
           </div>
         );
 
       case "Admin Information":
         return (
-          <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
-            <p>School Admin credentials were generated automatically when this school was onboarded.</p>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-4 flex-1">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-bold text-lg">
+                    {(school.adminName || "SA").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">{school.adminName || "School Administrator"}</h3>
+                    <p className="text-xs text-slate-500">Authorized School Administrator</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2">
+                  <InfoRow icon={Mail} label="Admin Login Email" value={school.adminEmail || `admin@${school.domain || "school.edu"}`} />
+                  <InfoRow icon={Users} label="Account Role" value="School Admin (Role: ADMIN)" />
+                  <InfoRow icon={Activity} label="Status" value={school.status === "active" ? "Active & Authorized" : "Suspended"} />
+                  <InfoRow icon={Building2} label="Associated School" value={school.schoolName || school.name} />
+                </div>
+              </div>
+
+              <div className="shrink-0 pt-2">
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+                >
+                  <Pencil size={14} />
+                  Edit Admin / Reset Password
+                </button>
+              </div>
+            </div>
           </div>
         );
 
@@ -65,8 +139,8 @@ export default function SchoolDetailsPage() {
               { key: "name", label: "Name" }, { key: "email", label: "Email" },
               { key: "subject", label: "Subject" }, { key: "gradeLevel", label: "Grade" },
             ]}
-            data={[]}
-            loading={false}
+            data={teachers}
+            loading={listsLoading}
             keyExtractor={(row) => row.id}
             emptyTitle="No teachers yet"
             emptyDescription="Teachers onboarded in this school will appear here."
@@ -80,8 +154,8 @@ export default function SchoolDetailsPage() {
               { key: "name", label: "Name" }, { key: "email", label: "Email" },
               { key: "grade", label: "Grade" }, { key: "section", label: "Section" },
             ]}
-            data={[]}
-            loading={false}
+            data={students}
+            loading={listsLoading}
             keyExtractor={(row) => row.id}
             emptyTitle="No students yet"
             emptyDescription="Students enrolled in this school will appear here."
@@ -95,8 +169,8 @@ export default function SchoolDetailsPage() {
               { key: "name", label: "Course" }, { key: "subject", label: "Subject" },
               { key: "grade", label: "Grade" }, { key: "status", label: "Status" },
             ]}
-            data={[]}
-            loading={false}
+            data={courses}
+            loading={listsLoading}
             keyExtractor={(row) => row.id}
             emptyTitle="No courses yet"
             emptyDescription="Courses created for this school will appear here."
@@ -149,6 +223,9 @@ export default function SchoolDetailsPage() {
           </div>
         );
 
+      case "Support Tools":
+        return <SupportToolsPanel school={school} />;
+
       default:
         return null;
     }
@@ -166,7 +243,7 @@ export default function SchoolDetailsPage() {
               <h1 className="text-2xl font-semibold text-slate-900">{school.schoolName}</h1>
               <SchoolStatusBadge status={school.status} />
             </div>
-            <p className="mt-1 text-sm text-slate-500">{school.schoolCode} · {school.city}, {school.state}</p>
+            <p className="mt-1 text-sm text-slate-500">{school.schoolCode}{[school.city, school.state].filter(Boolean).length ? ` · ${[school.city, school.state].filter(Boolean).join(", ")}` : ""}</p>
           </div>
           <button
             onClick={() => setEditOpen(true)}

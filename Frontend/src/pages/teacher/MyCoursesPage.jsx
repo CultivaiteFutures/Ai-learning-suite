@@ -12,7 +12,7 @@ import { useDataTable } from "../../hooks/useDataTable";
 
 export default function MyCoursesPage() {
   const navigate = useNavigate();
-  const { courses, deleteCourse } = useCourses();
+  const { courses, deleteCourse, courseError, clearCourseError } = useCourses();
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -54,13 +54,11 @@ export default function MyCoursesPage() {
     [courses]
   );
 
-  function confirmDelete() {
+  async function confirmDelete() {
     setDeleting(true);
-    setTimeout(() => {
-      deleteCourse(deleteTarget.id);
-      setDeleting(false);
-      setDeleteTarget(null);
-    }, 500);
+    const ok = await deleteCourse(deleteTarget.id);
+    setDeleting(false);
+    if (ok) setDeleteTarget(null);
   }
 
   return (
@@ -69,6 +67,15 @@ export default function MyCoursesPage() {
         <h1 className="text-2xl font-semibold text-slate-900">My Courses</h1>
         <p className="mt-1 text-sm text-slate-500">Manage the courses you've created for your students.</p>
       </div>
+
+      {courseError && (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <span>{courseError}</span>
+          <button onClick={clearCourseError} className="font-medium text-rose-600 hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <DashboardCard label="Total Courses" value={stats.total} icon={BookOpen} accent="indigo" />

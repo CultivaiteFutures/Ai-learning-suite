@@ -21,7 +21,7 @@ const SUBJECT_OPTIONS = [
 ].map((s) => ({ value: s, label: s }));
 
 const GRADE_OPTIONS = [
-  "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
+  "Kindergarten", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
 ].map((g) => ({ value: g, label: g }));
 
 const TABS = ["Course Information", "Modules & Lessons", "Assignments", "Preview"];
@@ -32,8 +32,9 @@ export default function CourseBuilderPage() {
   const { user } = useAuth();
   const {
     getCourseById, addCourse, updateCourse, publishCourse,
-    addModule, updateModule, deleteModule, reorderModule,
+    addModule, updateModule, updateModuleSchedule, deleteModule, reorderModule,
     getAssignmentsByCourse, addAssignment, updateAssignment, deleteAssignment,
+    courseError, clearCourseError,
   } = useCourses();
 
   const [activeTab, setActiveTab] = useState("Course Information");
@@ -127,9 +128,11 @@ export default function CourseBuilderPage() {
   }
 
   function handleSaveAssignment(data) {
-    if (editingAssignment) updateAssignment(editingAssignment.id, data);
-    else addAssignment({ ...data, courseId: course.id });
+    const result = editingAssignment
+      ? updateAssignment(editingAssignment.id, data)
+      : addAssignment({ ...data, courseId: course.id });
     setAssignmentModalOpen(false);
+    return result;
   }
 
   function confirmDeleteAssignment() {
@@ -137,13 +140,16 @@ export default function CourseBuilderPage() {
     setDeleteAssignmentTarget(null);
   }
 
-  function handlePublish() {
+  async function handlePublish() {
     setPublishing(true);
-    setTimeout(() => {
-      publishCourse(course.id);
+    try {
+      const ok = await publishCourse(course.id);
+      if (ok) navigate("/teacher/courses");
+    } catch (err) {
+      console.error(err);
+    } finally {
       setPublishing(false);
-      navigate("/teacher/courses");
-    }, 500);
+    }
   }
 
   const assignments = getAssignmentsByCourse(course.id);
@@ -172,6 +178,14 @@ export default function CourseBuilderPage() {
 
   return (
     <div className="space-y-6">
+      {courseError && (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <span>{courseError}</span>
+          <button onClick={clearCourseError} className="font-medium text-rose-600 hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
       <div>
         <Link to="/teacher/courses" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700">
           <ArrowLeft size={15} /> Back to My Courses
@@ -241,7 +255,12 @@ export default function CourseBuilderPage() {
               key={module.id}
               module={module}
               index={index}
+              allModules={course.modules || []}
               onChange={(updated) => updateModule(course.id, module.id, updated)}
+              onScheduleChange={(field, value) => updateModuleSchedule(course.id, module.id, {
+                publishAt: field === "publishAt" ? value : (module.publishAt || module.publish_at || null),
+                prerequisiteModuleId: field === "prerequisiteModuleId" ? value : (module.prerequisiteModuleId || module.prerequisite_module_id || null),
+              })}
               onRemove={() => deleteModule(course.id, module.id)}
               onMoveUp={index > 0 ? () => reorderModule(course.id, module.id, "up") : null}
               onMoveDown={index < course.modules.length - 1 ? () => reorderModule(course.id, module.id, "down") : null}

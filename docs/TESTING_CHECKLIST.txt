@@ -1,0 +1,201 @@
+AI LEARNING SUITE — MANUAL TESTING CHECKLIST
+Prepared 2026-09-01. Plain-text QA list for manual pass/fail testing.
+No automated test suite exists yet, so this is the working checklist until one does.
+Check items off as [x] while testing. Note any failure inline with what you saw.
+
+
+0. BEFORE YOU START
+[ ] Backend running: cd Backend/backend, alembic upgrade head, uvicorn app.main:app --reload
+[ ] Frontend running: cd Frontend, npm run dev
+[ ] .env has a real DATABASE_URL and GEMINI_API_KEY (Gemini is the only AI provider with a
+    live key today — Claude tests below will correctly show "AI configuration required"
+    unless you add CLAUDE_API_KEY)
+[ ] You have a Super Admin login (bootstrapped from FIRST_SUPERUSER / FIRST_SUPERUSER_PASSWORD,
+    or the code defaults superadmin@system.com / password123 if you never set them)
+[ ] GET /health returns {"status": "healthy"}
+
+
+1. AUTHENTICATION (all roles)
+[ ] Log in with a valid Super Admin account — lands on /super-admin/dashboard
+[ ] Log in with a valid School Admin account — lands on /admin/dashboard
+[ ] Log in with a valid Teacher account — lands on /teacher/dashboard
+[ ] Log in with a valid Student account — lands on /student/dashboard
+[ ] Log in with wrong password — clear error shown, not logged in
+[ ] Log in with an email that doesn't exist — clear error shown
+[ ] Log in as a suspended/deactivated school's user — access denied
+[ ] Refresh the page while logged in — session persists, stays on same screen
+[ ] Log out (if you can find a logout control) and confirm token no longer works
+[ ] "Forgot password?" link on login — confirm it still does nothing (known gap, not a new bug)
+[ ] Manually edit a JWT or use an expired one — API returns 401, frontend bounces to /login
+
+
+2. ROLE & TENANT ACCESS CONTROL (security — do these carefully)
+[ ] As a Teacher, manually navigate to /admin/dashboard — redirected away
+[ ] As a Student, manually navigate to /teacher/courses — redirected away
+[ ] As a Teacher at School A, note School B's course ID, try GET /teacher/courses/{B's id}
+    directly via API — should 403/404, not return School B's data
+[ ] As a Student, try POST /ai/tutor-chat with a course ID you're not enrolled in — should be
+    rejected, not answer using that course's content
+[ ] As a School Admin, confirm you cannot see or affect another school's teachers/students
+[ ] Log in as Super Admin — confirm you CAN see data across multiple schools (this is the one
+    intentional exception to tenant isolation)
+
+
+3. SUPER ADMIN
+[ ] Create a new school (with a new Admin account) — school appears in list, admin can log in
+[ ] Edit a school's name/domain — change is saved and reflected
+[ ] Change a school's AI provider between gemini and claude — saved correctly
+[ ] Suspend a school — that school's users can no longer log in
+[ ] Re-activate a suspended school — users can log in again
+[ ] Delete a school — confirm it's actually removed (and that this is really what you want —
+    check whether related data is cleaned up or orphaned)
+[ ] View platform stats — counts match what you'd expect from schools/users/courses created
+[ ] View platform activity log — recent actions (school created, etc.) appear
+[ ] Create a golden template course (with modules/lessons) — appears in golden template list
+[ ] Edit a subscription's plan/status/end date for a school — saved correctly
+[ ] Open a school's detail page — check the Teachers, Students, and Courses tabs
+    (known gap: these currently always render empty — confirm whether this is still true)
+
+
+4. SCHOOL ADMIN
+[ ] Create a teacher manually — credentials shown once, teacher can log in with them
+[ ] Create a student manually — credentials shown once, student can log in with them
+[ ] Edit a teacher's details — saved correctly
+[ ] Delete a teacher — removed from list; confirm their courses' fate (reassigned? orphaned?)
+[ ] Create a grade/section — appears in grade list and in student-creation dropdown
+[ ] Delete a grade that has students in it — check what happens (error, or students left dangling)
+[ ] Download the Excel bulk-upload template — opens correctly, has expected columns
+[ ] Fill in the template with 3-5 students and upload it — students created, credentials shown
+[ ] Upload the same file again — duplicates handled sensibly (skipped/flagged, not double-created)
+[ ] Upload a malformed file (missing required column) — clear error, not a crash
+[ ] View school activity log — reflects actions taken above
+[ ] Update school profile (name/domain) in Settings — saved
+[ ] Update own admin profile in Settings — saved
+[ ] Change own password in Settings — old password stops working, new one works
+
+
+5. TEACHER — COURSE BUILDING
+[ ] Create a course manually (title, subject, grade level, etc.) — saved as draft
+[ ] Add a module to the course — appears in order
+[ ] Add a lesson to a module (content, summary, duration) — saved
+[ ] Reorder modules/lessons — order persists after refresh
+[ ] Edit an existing lesson — changes saved
+[ ] Delete a lesson / module / course — removed, and check cascading effects (does deleting a
+    course remove its enrollments/submissions, or orphan them?)
+[ ] Use "Generate with AI" from a text prompt — produces a plausible module/lesson structure
+    you can review and edit before saving
+[ ] Use "Generate from PDF" — upload a real PDF (a worksheet or chapter), confirm extracted
+    text is reasonably structured into a course
+[ ] Try "Generate from PDF" with a scanned/image-only PDF — confirm it fails gracefully or
+    produces empty content (known limitation: no OCR fallback) rather than crashing
+[ ] Try AI generation with no AI key configured for that school's provider — confirm you get
+    a clear "AI configuration required" message, not a silent failure or fake content
+[ ] Publish a course — join code is generated and displayed
+[ ] Un-publish a course — students can no longer see/join it
+[ ] Adopt a golden template into your own school — creates an independent copy; edit the copy
+    and confirm the original golden template is unaffected
+
+
+6. TEACHER — ASSIGNMENTS & GRADING
+[ ] Create an assignment (Quiz type) tied to a course — appears in assignments list
+[ ] Create a Homework and a Project type assignment — type is saved and displayed correctly
+[ ] Create a Gamified Match assignment — confirm the config (pairs) saves correctly
+[ ] Generate an assignment with AI — review before saving
+[ ] Generate a Gamified Match with AI — confirm the generated pairs actually work in the
+    student-side matching game (see section 7)
+[ ] Edit an existing assignment — change actually persists after refresh (this was previously
+    a silent no-op bug — confirm it's fixed)
+[ ] Upload a PDF to extract an answer key (no AI) — raw text comes back for review
+[ ] Set a due date in the past — confirm student-side status shows "Overdue" correctly
+[ ] View submissions for an assignment — real student submissions listed
+[ ] Grade a submission manually (points + feedback) — saved, visible to the student
+[ ] Use "AI Suggest Grade" against an answer key — get a suggested grade/feedback, edit it,
+    then explicitly save — confirm the grade is NOT written until you save it
+[ ] Confirm AI grading with no key configured shows a clear error, not a fake grade
+[ ] Export gradebook as Excel — opens correctly, data matches what's in the app
+[ ] Export gradebook as PDF — opens correctly, readable, data matches
+
+
+7. TEACHER — ROSTER & ANALYTICS
+[ ] View full student roster — matches actual enrolled students
+[ ] View per-course roster — matches actual enrollments for that course
+[ ] View Analytics page — completion rate reflects real lesson-completion data (spot-check
+    against what you know a specific student has completed)
+[ ] Confirm "students enrolled" count on course cards is accurate (known past gap — verify)
+[ ] Check the Weekly Score Trend area — confirm it's an honest "not tracked yet" placeholder,
+    not fabricated data
+[ ] Update teacher profile in Settings — saved
+[ ] Change teacher password in Settings — works
+[ ] Confirm you can actually reach Teacher Settings from the UI (known gap: not linked from
+    the sidebar — currently URL-only)
+
+
+8. STUDENT — ENROLLMENT & LEARNING
+[ ] Join a course using a valid join code — enrolled, course appears in "My Courses"
+[ ] Try an invalid/expired join code — clear error
+[ ] Try joining a course that isn't published — should not be joinable
+[ ] Open a course and go through the lesson player — content, summary, activities display
+[ ] Answer the inline quiz in a lesson — "Check Answers" grades correctly, "Retry" resets it
+[ ] Mark a lesson complete — XP increases, streak updates
+[ ] Log out and back in (or reload) — confirm lesson-completion state is remembered, not
+    reset to incomplete (known past gap — verify this is actually fixed)
+[ ] Submit an assignment (text) — status updates to Submitted
+[ ] Submit a file for an assignment — uploads and is retrievable by the teacher
+[ ] Re-submit before grading — updates the existing submission rather than duplicating
+[ ] Play a Gamified Match assignment — pairs match correctly, score/XP awarded on completion
+[ ] View assignment list — statuses (Not Started / Submitted / Graded / Overdue) are correct
+    for a mix of assignments in different states
+
+
+9. STUDENT — AI TUTOR, PROGRESS, REWARDS
+[ ] Open AI Tutor and ask a question clearly covered in your enrolled course — answer is
+    grounded in that course's actual content
+[ ] Ask the AI Tutor something unrelated to your course content — confirm it doesn't just
+    answer generically outside the curriculum (or note how it actually behaves)
+[ ] Ask the AI Tutor about a course you're NOT enrolled in (if reachable at all) — should be
+    blocked, not answered
+[ ] Confirm AI Tutor shows a clear error if no AI key is configured, rather than hanging
+[ ] Check XP/streak/leaderboard — leaderboard ranks correctly against other students in the
+    same school (not other schools)
+[ ] Check the two badge displays (Rewards page vs. the dashboard Badges card) — note whether
+    they still show different badge lists (known gap — confirm current state)
+[ ] View Profile page — confirm it shows your actual saved grade/section/school, not the
+    generic fallback placeholder (known past gap — verify)
+[ ] Change password in Profile — works
+
+
+10. CROSS-CUTTING / DATA INTEGRITY
+[ ] Create identical-looking records (two students with the same name) — no id collisions,
+    both function independently
+[ ] Do a create action while briefly disconnecting network (or stopping the backend) —
+    confirm the UI shows an error rather than pretending the save succeeded (known gap in
+    several places — course/teacher/student/grade/template creation — check each)
+[ ] Notification bell — confirm whether it's still showing the fixed placeholder content or
+    has been wired to something real
+[ ] Global search box in the header — confirm whether it does anything yet
+[ ] Try /student/games (or the equivalent UI, if any) — confirm current behavior given
+    evaluation_games is not populated anywhere in the backend
+
+
+11. EXPORTS & FILES
+[ ] Excel gradebook export opens cleanly in Excel/Sheets/LibreOffice, headers and data align
+[ ] PDF gradebook export opens cleanly, landscape table is readable
+[ ] Excel student bulk-upload template opens cleanly with correct column headers
+[ ] Large PDF upload (30+ pages) to AI course generation — note how long it takes and
+    whether content gets cut off (known limitation: no chunking)
+
+
+12. CONFIG / DEPLOYMENT SANITY
+[ ] Confirm SECRET_KEY, FIRST_SUPERUSER_PASSWORD, and CORS_ORIGINS are set explicitly in
+    .env before this goes anywhere beyond your own machine — do not rely on code defaults
+[ ] Run alembic upgrade head against a fresh database and confirm no missing-column errors
+[ ] Run npm run build and confirm it completes without errors on the actual target machine
+
+
+NOTES
+- Items marked "known gap" / "known limitation" reference issues already identified in the
+  project's technical documentation — the point of re-testing them here is to confirm
+  current status (fixed, still open, or regressed), not to re-discover them from scratch.
+- This list covers the features that exist today. It intentionally does not include
+  Announcements, Discussions, Academic Calendar, Scheduled Release, Prerequisites, or a
+  Teacher AI Assistant — none of those are built yet.

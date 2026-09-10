@@ -73,11 +73,19 @@ export function TutorChatProvider({ children }) {
     return trimmed.length > 42 ? trimmed.slice(0, 42) + "…" : trimmed;
   }
 
-  async function sendMessage(text, attachment) {
+  async function sendMessage(text, attachment, context) {
     const trimmed = text.trim();
     if (!trimmed && !attachment) return;
 
     const sessionId = activeSessionId;
+    const priorMessages = (sessions.find((s) => s.id === sessionId)?.messages || []);
+    // Real multi-turn context for the AI, not just the single new question --
+    // capped to the last 10 turns so the prompt doesn't grow unbounded.
+    const conversationHistory = priorMessages
+      .filter((m) => !m.isTyping && m.content)
+      .slice(-10)
+      .map((m) => ({ role: m.role, content: m.content }));
+
     const userMessage = {
       id: generateId(),
       role: "user",
@@ -103,7 +111,11 @@ export function TutorChatProvider({ children }) {
     updateSession(sessionId, (s) => ({ ...s, messages: [...s.messages, placeholder] }));
 
     setIsSending(true);
-    const fullResponse = await generateTutorResponse(trimmed || "Explain the attached image");
+    const fullResponse = await generateTutorResponse(
+      trimmed || "Explain the attached image",
+      context || {},
+      conversationHistory
+    );
 
     // Reveal word by word for a ChatGPT-style typing animation
     const words = fullResponse.split(" ");

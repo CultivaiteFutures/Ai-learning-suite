@@ -81,6 +81,8 @@ class SchoolUpdate(BaseSchema):
             self.plan = self.subscriptionPlan
         return self
 
+from app.schemas.user import UserResponse
+
 class SchoolResponse(BaseSchema):
     id: str
     name: str
@@ -94,6 +96,11 @@ class SchoolResponse(BaseSchema):
     student_count: Optional[int] = 0
     teacher_count: Optional[int] = 0
     course_count: Optional[int] = 0
+    admin_user: Optional[UserResponse] = None
+    admin_name: Optional[str] = None
+    admin_email: Optional[str] = None
+    admin_id: Optional[str] = None
+    generated_admin_password: Optional[str] = None
     created_at: Optional[datetime] = None
     created_date: Optional[str] = None
 
@@ -104,4 +111,29 @@ class SchoolResponse(BaseSchema):
         self.status = "active" if self.is_active else "suspended"
         if self.created_at and not self.created_date:
             self.created_date = self.created_at.strftime("%Y-%m-%d")
+        if self.admin_user:
+            self.admin_name = self.admin_user.full_name
+            self.admin_email = self.admin_user.email
+            self.admin_id = self.admin_user.id
         return self
+
+class SubscriptionUpdate(BaseSchema):
+    plan: Optional[str] = None
+    status: Optional[str] = None
+    end_date: Optional[datetime] = None
+    endDate: Optional[datetime] = None
+
+    @model_validator(mode='after')
+    def resolve_aliases(self):
+        if not self.end_date and self.endDate:
+            self.end_date = self.endDate
+        return self
+
+class SubscriptionResponse(BaseSchema):
+    id: str
+    school_id: str
+    school_name: Optional[str] = None
+    plan: Optional[str] = None
+    status: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None

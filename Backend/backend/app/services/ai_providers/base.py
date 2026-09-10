@@ -52,3 +52,12 @@ class BaseAIProvider(ABC):
         max_points: float = 100.0
     ) -> Dict[str, Any]:
         pass
+
+    @abstractmethod
+    def grade_submission_with_rubric(
+        self,
+        submission_text: str,
+        criteria: List[Dict[str, Any]],
+        assignment_title: str = ""
+    ) -> Dict[str, Any]:
+        pass

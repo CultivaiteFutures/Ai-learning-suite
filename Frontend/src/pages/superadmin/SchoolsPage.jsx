@@ -3,6 +3,7 @@ import { Building2, CheckCircle2, XCircle } from "lucide-react";
 import PlatformStatCard from "../../components/superadmin/PlatformStatCard";
 import SchoolTable from "../../components/superadmin/SchoolTable";
 import SchoolFormModal from "../../components/superadmin/SchoolFormModal";
+import OnboardingWizardModal from "../../components/superadmin/OnboardingWizardModal";
 import CredentialsRevealModal from "../../components/superadmin/CredentialsRevealModal";
 import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
@@ -14,6 +15,7 @@ export default function SchoolsPage() {
   const { schools, addSchool, updateSchool, suspendSchool, activateSchool, deleteSchool } = useSchools();
 
   const [formOpen, setFormOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -36,7 +38,7 @@ export default function SchoolsPage() {
 
   function openCreate() {
     setEditingSchool(null);
-    setFormOpen(true);
+    setWizardOpen(true);
   }
 
   function openEdit(school) {
@@ -50,7 +52,7 @@ export default function SchoolsPage() {
       setFormOpen(false);
     } else {
       const { school, admin } = await addSchool(data);
-      setFormOpen(false);
+      setWizardOpen(false);
       setCredentials({ school, admin });
     }
   }
@@ -96,6 +98,7 @@ export default function SchoolsPage() {
                 { value: "all", label: "All Plans" },
                 { value: "Trial", label: "Trial" },
                 { value: "Basic", label: "Basic" },
+                { value: "Professional", label: "Professional" },
                 { value: "Premium", label: "Premium" },
                 { value: "Enterprise", label: "Enterprise" },
               ],
@@ -122,6 +125,7 @@ export default function SchoolsPage() {
       </div>
 
       <SchoolFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} onSave={handleSave} initialData={editingSchool} />
+      <OnboardingWizardModal isOpen={wizardOpen} onClose={() => setWizardOpen(false)} onSave={handleSave} />
 
       <CredentialsRevealModal
         isOpen={!!credentials}

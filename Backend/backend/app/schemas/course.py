@@ -46,6 +46,10 @@ class ModuleCreate(BaseSchema):
     description: Optional[str] = ""
     order: Optional[int] = 0
     lessons: Optional[List[LessonCreate]] = []
+    publish_at: Optional[datetime] = None
+    publishAt: Optional[datetime] = None
+    prerequisite_module_id: Optional[str] = None
+    prerequisiteModuleId: Optional[str] = None
 
     @model_validator(mode='after')
     def resolve_title(self):
@@ -53,6 +57,10 @@ class ModuleCreate(BaseSchema):
             self.title = self.name
         if not self.title:
             self.title = "Untitled Module"
+        if not self.publish_at and self.publishAt:
+            self.publish_at = self.publishAt
+        if not self.prerequisite_module_id and self.prerequisiteModuleId:
+            self.prerequisite_module_id = self.prerequisiteModuleId
         return self
 
 class ModuleResponse(BaseSchema):
@@ -62,6 +70,11 @@ class ModuleResponse(BaseSchema):
     description: Optional[str] = ""
     order: int
     lessons: List[LessonResponse] = []
+    publish_at: Optional[datetime] = None
+    prerequisite_module_id: Optional[str] = None
+    is_locked: bool = False
+    lock_reason: Optional[str] = None
+    unlocks_at: Optional[datetime] = None
 
     @model_validator(mode='after')
     def set_name_alias(self):
@@ -107,6 +120,7 @@ class CourseResponse(BaseSchema):
     is_golden_template: bool
     origin_template_id: Optional[str] = None
     school_id: Optional[str] = None
+    created_by_id: Optional[str] = None
     created_at: Optional[datetime] = None
     modules: List[ModuleResponse] = []
 
@@ -120,3 +134,14 @@ class CourseResponse(BaseSchema):
             self.joinCode = self.join_code
         self.status = "published" if self.is_published else "draft"
         return self
+
+class CoTeacherAddRequest(BaseSchema):
+    email: str
+
+
+class CoTeacherResponse(BaseSchema):
+    id: str
+    teacher_id: str
+    name: str
+    email: str
+    added_at: Optional[datetime] = None

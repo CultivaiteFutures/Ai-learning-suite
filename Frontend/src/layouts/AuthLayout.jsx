@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Logo from "../components/common/Logo";
 
 export default function AuthLayout({ children, title, subtitle }) {
@@ -18,6 +19,14 @@ export default function AuthLayout({ children, title, subtitle }) {
           </div>
 
           <div className="mt-8">{children}</div>
+
+          <div className="mt-10 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400">
+            <Link to="/privacy-policy" className="hover:text-slate-600 hover:underline">Privacy Policy</Link>
+            <span>·</span>
+            <Link to="/terms-of-service" className="hover:text-slate-600 hover:underline">Terms of Service</Link>
+            <span>·</span>
+            <Link to="/dpa" className="hover:text-slate-600 hover:underline">Data Processing Agreement</Link>
+          </div>
         </div>
       </div>
 

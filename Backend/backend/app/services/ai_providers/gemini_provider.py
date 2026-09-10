@@ -261,3 +261,32 @@ Return STRICT JSON only matching this schema:
         config = types.GenerateContentConfig(response_mime_type="application/json")
         raw_text = self._call_gemini(contents=prompt, config=config)
         return self._extract_json(raw_text)
+
+    def grade_submission_with_rubric(
+        self,
+        submission_text: str,
+        criteria: List[Dict[str, Any]],
+        assignment_title: str = ""
+    ) -> Dict[str, Any]:
+        criteria_json = json.dumps(criteria, indent=2)
+        prompt = f'''You are an expert academic evaluator grading a student's submission against a scoring rubric, one criterion at a time.
+
+Assignment: {assignment_title}
+
+Rubric Criteria (grade the submission against EACH of these independently):
+{criteria_json}
+
+Student Submission:
+{submission_text}
+
+For every criterion above, decide how many of its points the submission earns and why -- point to specific evidence in the submission (or note what's missing) rather than a generic comment. Use the criterion's own "id" value exactly as given, unchanged, as "criterion_id" in your response.
+Return STRICT JSON only matching this schema:
+{{
+  "criteria": [
+    {{"criterion_id": "<the exact id from above>", "suggested_points": 4, "justification": "Specific reasoning tied to the submission text..."}}
+  ],
+  "overall_feedback": "A short overall comment for the student, synthesizing the criteria above."
+}}'''
+        config = types.GenerateContentConfig(response_mime_type="application/json")
+        raw_text = self._call_gemini(contents=prompt, config=config)
+        return self._extract_json(raw_text)

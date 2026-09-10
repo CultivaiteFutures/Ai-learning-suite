@@ -1,6 +1,6 @@
-import { superAdminAPI, teacherAPI } from "./api";
+import { superAdminAPI } from "./api";
 import { generateId } from "../utils/generateId";
-import { generateSchoolCode, generateTempPassword, generateAdminEmail } from "../utils/generateCredentials";
+import { generateSchoolCode, generateAdminEmail } from "../utils/generateCredentials";
 
 export const schoolService = {
   async createSchool(schoolData) {
@@ -10,10 +10,10 @@ export const schoolService = {
       generateAdminEmail(generateSchoolCode(schoolData.schoolName || ""))
     ).trim();
 
-    const adminPassword = (
-      schoolData.adminPassword ||
-      generateTempPassword()
-    ).trim();
+    // Only a password the caller actually typed is sent -- when left blank,
+    // the backend generates a secure one server-side and returns it below,
+    // instead of this client producing the real login credential itself.
+    const manualAdminPassword = (schoolData.adminPassword || "").trim();
 
     const adminName = (
       schoolData.adminName ||
@@ -26,25 +26,26 @@ export const schoolService = {
       domain: schoolData.domain || `${(schoolData.schoolName || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.edu`,
       admin_email: adminEmail,
       admin_name: adminName,
-      admin_password: adminPassword,
+      admin_password: manualAdminPassword || undefined,
       plan: schoolData.subscriptionPlan || "Professional",
       ai_provider: schoolData.aiProvider || "gemini"
     };
 
     const res = await superAdminAPI.createSchool(payload);
     const created = res.data;
+    const adminPassword = manualAdminPassword || created.generatedAdminPassword || "";
 
     const school = {
       id: created.id,
       schoolName: created.name,
       schoolCode: generateSchoolCode(created.name),
-      status: created.is_active ? "active" : "suspended",
+      status: created.isActive ? "active" : "suspended",
       createdDate: new Date().toISOString().slice(0, 10),
-      studentCount: created.student_count || 0,
-      teacherCount: created.teacher_count || 0,
-      courseCount: created.course_count || 0,
-      subscriptionPlan: created.subscription_plan || payload.plan,
-      aiProvider: created.ai_provider || payload.ai_provider,
+      studentCount: created.studentCount || 0,
+      teacherCount: created.teacherCount || 0,
+      courseCount: created.courseCount || 0,
+      subscriptionPlan: created.subscriptionPlan || payload.plan,
+      aiProvider: created.aiProvider || payload.ai_provider,
       monthlyActiveUsers: 0,
       aiUsageCount: 0,
       ...schoolData,
@@ -92,21 +93,4 @@ export const schoolService = {
     return { id, deleted: true };
   },
 
-  async adoptGoldenTemplate(template, schoolId) {
-    const res = await teacherAPI.adoptGoldenTemplate(template.id);
-    const cloned = res.data;
-    return {
-      id: cloned.id,
-      name: cloned.title || cloned.name,
-      subject: cloned.subject,
-      grade: cloned.grade_level || cloned.grade,
-      description: cloned.description,
-      status: "draft",
-      lessonsCount: (cloned.modules || []).reduce((sum, m) => sum + (m.lessons?.length || 0), 0),
-      originTemplateId: template.id,
-      schoolId,
-      createdDate: new Date().toISOString().slice(0, 10),
-      updatedDate: new Date().toISOString().slice(0, 10),
-    };
-  },
 };

@@ -60,7 +60,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-slate-800">{t.name || t.full_name}</p>
                     <p className="text-xs text-slate-500">{t.subject || "Teacher"} · {t.grade || t.grade_level || "School"}</p>
                   </div>
-                  <StatusBadge status={t.status || (t.is_active ? "active" : "inactive")} />
+                  <StatusBadge status={t.status || (t.isActive ? "active" : "inactive")} />
                 </div>
               ))
             )}
